@@ -6,6 +6,6 @@ find_package(OpenGL REQUIRED)
 
 include_directories(${CMAKE_SOURCE_DIR}/glad ${CMAKE_SOURCE_DIR}/src/vendor)
 
-add_executable(opengl_tutorial src/main.cpp src/Renderer.cpp src/VertexBuffer.cpp src/IndexBuffer.cpp src/VertexArray.cpp src/Shader.cpp src/Macros.cpp src/Texture.cpp src/Camera.cpp src/vendor/stb_image/stb_image.cpp include/glad.c)
+add_executable(opengl_tutorial src/main.cpp src/Renderer.cpp src/VertexBuffer.cpp src/IndexBuffer.cpp src/VertexArray.cpp src/Shader.cpp src/Macros.cpp src/Texture.cpp src/Camera.cpp src/PerlinNoise.cpp src/vendor/stb_image/stb_image.cpp include/glad.c)
 
 target_link_libraries(opengl_tutorial glfw OpenGL::GL)

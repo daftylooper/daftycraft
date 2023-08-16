@@ -19,6 +19,7 @@
 #include "Renderer.h"
 #include "Texture.h"
 #include "Camera.h"
+#include "PerlinNoise.h"
 // #include "MyWindow.h"
 
 int width = 1920;
@@ -48,7 +49,7 @@ int main(void){
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(width, height, "Hello OpenGL", NULL, NULL);
+    window = glfwCreateWindow(width, height, "Daftycraft!", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -70,34 +71,34 @@ int main(void){
 
     float vertices[] = {
         -0.5f, 0.5f, 0.5f, 0.0f, 1.0f,
-        0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
-        0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+        0.5f, 0.5f, 0.5f, 0.25f, 1.0f,
+        0.5f, -0.5f, 0.5f, 0.25f, 0.0f,
         -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
 
         -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
-        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-        0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
+        0.5f, 0.5f, -0.5f, 0.25f, 1.0f,
+        0.5f, -0.5f, -0.5f, 0.25f, 0.0f,
         -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
 
-        -0.5f, 0.5f, 0.5f, 0.0f, 1.0f,
-        0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
-        0.5f, 0.5f, -0.5f, 1.0f, 0.0f,
-        -0.5f, 0.5f, -0.5f, 0.0f, 0.0f,
+        -0.5f, 0.5f, 0.5f, 0.25f, 0.0f,
+        0.5f, 0.5f, 0.5f, 0.5f, 0.0f,
+        0.5f, 0.5f, -0.5f, 0.5f, 1.0f,
+        -0.5f, 0.5f, -0.5f, 0.25f, 1.0f,
 
-        -0.5f, -0.5f, 0.5f, 0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f, 1.0f, 1.0f,
-        0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
-        0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+        -0.5f, -0.5f, 0.5f, 0.5f, 0.0f,
+        -0.5f, -0.5f, -0.5f, 0.5f, 1.0f,
+        0.5f, -0.5f, -0.5f, 0.75f, 1.0f,
+        0.5f, -0.5f, 0.5f, 0.75f, 0.0f,
 
         0.5f, 0.5f, 0.5f, 0.0f, 1.0f,
-        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-        0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
+        0.5f, 0.5f, -0.5f, 0.25f, 1.0f,
+        0.5f, -0.5f, -0.5f, 0.25f, 0.0f,
         0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
 
-        -0.5f, 0.5f, 0.5f, 0.0f, 1.0f,
-        -0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f
+        -0.5f, 0.5f, 0.5f, 0.25f, 1.0f,
+        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+        -0.5f, -0.5f, 0.5f, 0.25f, 0.0f
     };
 
     unsigned int indices[] = {
@@ -120,18 +121,24 @@ int main(void){
         21, 22, 23
     };
 
-    glm::vec3 cubePositions[] = {
-        glm::vec3( 0.0f,  0.0f,  0.0f),
-        glm::vec3( 2.0f,  5.0f, -15.0f),
-        glm::vec3(-1.5f, -2.2f, -12.5f),
-        glm::vec3(-3.8f, -2.0f, -12.3f),
-        glm::vec3 (2.4f, -0.4f, -3.5f),
-        glm::vec3(-1.7f,  3.0f, -7.5f),
-        glm::vec3( 1.3f, -2.0f, -2.5f),
-        glm::vec3( 1.5f,  2.0f, -2.5f),
-        glm::vec3( 1.5f,  0.2f, -1.5f),
-        glm::vec3(-1.3f,  1.0f, -1.5f)
-    };
+    // glm::vec3 cubePositions[] = {
+    //     glm::vec3( 0.0f,  0.0f,  0.0f),
+    //     glm::vec3( 2.0f,  5.0f, -15.0f),
+    //     glm::vec3(-1.5f, -2.2f, -12.5f),
+    //     glm::vec3(-3.8f, -2.0f, -12.3f),
+    //     glm::vec3 (2.4f, -0.4f, -3.5f),
+    //     glm::vec3(-1.7f,  3.0f, -7.5f),
+    //     glm::vec3( 1.3f, -2.0f, -2.5f),
+    //     glm::vec3( 1.5f,  2.0f, -2.5f),
+    //     glm::vec3( 1.5f,  0.2f, -1.5f),
+    //     glm::vec3(-1.3f,  1.0f, -1.5f)
+    // };
+
+        PerlinNoise noise(11, 11, 99, 99);
+        noise.generatePerlin();
+        noise.generateCubes();
+
+    // std::cout<<"Cubes Generated Size: "<<noise.cubes.size()<<std::endl;
 
     // GLCall(glEnable(GL_DEPTH_CLAMP));
     GLCall(glEnable(GL_DEPTH_TEST));
@@ -156,7 +163,7 @@ int main(void){
     glm::mat4 projection    = glm::mat4(1.0f);
     projection = glm::perspective(glm::radians(60.0f), (float)width / (float)height, 0.1f, 100.0f);
 
-    Texture texture("../res/textures/becel-doge.jpg");
+    Texture texture("../res/textures/grass-texture.png");
     texture.Bind(0);
     shader.SetUniform1i("u_Texture", 0);
 
@@ -189,18 +196,31 @@ int main(void){
         struct cameraLookAt camValues = camera.getCameraView();
         glm::mat4 view = glm::lookAt(camValues.cameraPos, camValues.cameraFront, camValues.cameraUp);
         
-        for(int i=0; i<10; i++){
+        for(int i=0; i<noise.cubes.size(); i++){
 
             glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, cubePositions[i]);
-            float angle = 20.0f * i;
-            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+            model = glm::translate(model, noise.cubes[i]);
+            // float angle = 20.0f * i;
+            // model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
             glm::mat4 mvp = projection*view*model;
             shader.SetUniformMat4f("u_MVP", mvp);
 
             texture.Bind();
             renderer.Draw(va, ib, shader);
         }
+
+        // for(int i=0; i<1; i++){
+
+        //     glm::mat4 model = glm::mat4(1.0f);
+        //     model = glm::translate(model, glm::vec3(2.0f, 2.0f, 2.0f));
+        //     // float angle = 20.0f * i;
+        //     // model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+        //     glm::mat4 mvp = projection*view*model;
+        //     shader.SetUniformMat4f("u_MVP", mvp);
+
+        //     texture.Bind();
+        //     renderer.Draw(va, ib, shader);
+        // }
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
