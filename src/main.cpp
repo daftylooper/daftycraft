@@ -7,6 +7,7 @@
 #include <cassert>
 #include <chrono>
 #include <thread>
+#include <bitset>
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -26,7 +27,7 @@ int width = 1920;
 int height = 1080;
 
 Renderer renderer;
-Camera camera((float)width, (float)height, glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f), 500.0f);
+Camera camera((float)width, (float)height, glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f), 10.0f);
 
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn){
 
@@ -80,10 +81,10 @@ int main(void){
         0.5f, -0.5f, -0.5f, 0.25f, 0.0f,
         -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
 
+        -0.5f, 0.5f, -0.5f, 0.25f, 1.0f,
+        0.5f, 0.5f, -0.5f, 0.5f, 1.0f,
         -0.5f, 0.5f, 0.5f, 0.25f, 0.0f,
         0.5f, 0.5f, 0.5f, 0.5f, 0.0f,
-        0.5f, 0.5f, -0.5f, 0.5f, 1.0f,
-        -0.5f, 0.5f, -0.5f, 0.25f, 1.0f,
 
         -0.5f, -0.5f, 0.5f, 0.5f, 0.0f,
         -0.5f, -0.5f, -0.5f, 0.5f, 1.0f,
@@ -102,28 +103,73 @@ int main(void){
     };
 
     unsigned int indices[] = {
-        0, 1, 3,
-        1, 2, 3,
+        //FRONT
+        0, 1, 2,
+        0, 2, 3,
 
+        //BACK
         4, 5, 6,
         4, 6, 7,
 
-        8, 11, 10,
+        //TOP
         8, 9, 10,
+        9, 11, 10,
+    };
 
+    unsigned int remIndices[] = {
+        //BOTTOM
         12, 15, 13,
         13, 15, 14,
 
+        //RIGHT
         16, 17, 19,
         17, 18, 19,
 
+        //LEFT
         20, 21, 23,
         21, 22, 23
     };
 
+
+    // unsigned int indices[] = {
+    //     //FRONT
+    //     0, 1, 2,
+    //     0, 2, 3,
+
+    //     //BACK
+    //     4, 6, 5,
+    //     4, 7, 6,
+
+    //     // //TOP
+    //     4, 5, 1,
+    //     4, 1, 0,
+
+    //     // //BOTTOM
+    //     7, 6, 2,
+    //     7, 2, 3,
+
+    //     // //RIGHT
+    //     1, 5, 2,
+    //     5, 6, 2,
+
+    //     // //LEFT
+    //     4, 0, 3,
+    //     4, 3, 7,
+    // };
+
+    // std::vector<glm::vec3> cubePositions;
+    // int q = 3;
+    // for(int i=0; i<q; i++){
+    //     for(int j=0; j<q; j++){
+    //         for(int k=0; k<q; k++){
+    //             cubePositions.push_back(glm::vec3(1.0f*i, 1.0f*k, 1.0f*j));
+    //         }
+    //     }
+    // }
+
     // glm::vec3 cubePositions[] = {
     //     glm::vec3( 0.0f,  0.0f,  0.0f),
-    //     glm::vec3( 2.0f,  5.0f, -15.0f),
+    //     glm::vec3( 1.0f,  5.0f, -15.0f),
     //     glm::vec3(-1.5f, -2.2f, -12.5f),
     //     glm::vec3(-3.8f, -2.0f, -12.3f),
     //     glm::vec3 (2.4f, -0.4f, -3.5f),
@@ -134,13 +180,17 @@ int main(void){
     //     glm::vec3(-1.3f,  1.0f, -1.5f)
     // };
 
-        PerlinNoise noise(11, 11, 99, 99);
-        noise.generatePerlin();
-        noise.generateCubes();
+    PerlinNoise noise(11, 11, 33, 33);
+    noise.generatePerlin();
+    noise.generateCubes();
 
     // std::cout<<"Cubes Generated Size: "<<noise.cubes.size()<<std::endl;
 
     // GLCall(glEnable(GL_DEPTH_CLAMP));
+    // GLCall(glEnable(GL_CULL_FACE));
+    // GLCall(glCullFace(GL_FRONT));
+    // GLCall(glFrontFace(GL_CCW));
+    //
     GLCall(glEnable(GL_DEPTH_TEST));
     GLCall(glEnable(GL_BLEND));
     GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
@@ -154,7 +204,7 @@ int main(void){
     layout.Push(GL_FLOAT, 2);
     va.AddBuffer(vb, layout);
 
-    IndexBuffer ib(indices, sizeof(indices));
+    IndexBuffer ib(indices, sizeof(indices)/4);
 
     Shader shader("../res/shaders/Basic.shader");
     shader.Bind();
@@ -182,6 +232,18 @@ int main(void){
 
     bool keypressed = false;
 
+    //create std::vector<std::bitset> of faces using algo once - size = cubePOsitions
+    // std::vector<std::bitset<6>> faces;
+    // for(int i=0; i<cubePositions.size(); i++){
+    //     std::string bits = "111111";
+    //     // for(int j=i; j<cubePositions.size(); j++){
+    //     //     if(cubePositions[i][0]==cubePositions[i])
+    //     // }
+    //     // std::cout<<cubePositions[i][0]<<" "<<cubePositions[i][1]<<" "<<cubePositions[i][2]<<" "<<std::endl;
+    //     std::bitset<6> temp(bits);
+    //     faces.push_back(temp);
+    // }
+
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
@@ -195,7 +257,10 @@ int main(void){
 
         struct cameraLookAt camValues = camera.getCameraView();
         glm::mat4 view = glm::lookAt(camValues.cameraPos, camValues.cameraFront, camValues.cameraUp);
-        
+
+        //front - back - bottom - top - left - right
+        // std::bitset<6> faces("100101");
+
         for(int i=0; i<noise.cubes.size(); i++){
 
             glm::mat4 model = glm::mat4(1.0f);
@@ -206,13 +271,15 @@ int main(void){
             shader.SetUniformMat4f("u_MVP", mvp);
 
             texture.Bind();
-            renderer.Draw(va, ib, shader);
         }
+        renderer.Draw(va, ib, shader);
 
-        // for(int i=0; i<1; i++){
+        // for(int i=0; i<cubePositions.size(); i++){
+
+        //     ib.modifyData(faces[i]);
 
         //     glm::mat4 model = glm::mat4(1.0f);
-        //     model = glm::translate(model, glm::vec3(2.0f, 2.0f, 2.0f));
+        //     model = glm::translate(model, cubePositions[i]);
         //     // float angle = 20.0f * i;
         //     // model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
         //     glm::mat4 mvp = projection*view*model;
